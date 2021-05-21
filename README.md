@@ -13,7 +13,7 @@ conda install pytorch==1.3.1 torchvision cudatoolkit=10.1 -c pytorch
 Also install the following packages in the environment:
 
 ```
-tqdm tensorboardX boto3 regex sentencepiece sacremoses scikit-learn
+tqdm tensorboardX boto3 regex sentencepiece sacremoses scikit-learn requests
 ```
 
 ##  Data Preparation
@@ -55,22 +55,6 @@ wget https://msmarco.blob.core.windows.net/msmarcoranking/collectionandqueries.t
 tar -xvzf collectionandqueries.tar.gz
 ```
 
-#### ASNQ (https://github.com/alexa/wqa_tanda)
-
-Go to `data/asnq`, download the training set and extract it:
-
-```
-wget https://wqa-public.s3.amazonaws.com/tanda-aaai-2020/data/asnq.tar
-tar -xvf asnq.tar
-```
-
-then preprocess the dataset and partition the def set:
-
-```
-python preprocess.py
-python partition_eval.py dev
-```
-
 ## Training the Model
 
 ```
@@ -79,19 +63,9 @@ scripts/train.sh bert base DATASET all
 
 `bert base` is the pre-trained model; `all` stands for training all layers together.
 
-DATASET can be chosen among `msmarco` or `asnq`.
+DATASET can be chosen as `msmarco`.
 
 ## Evaluating the Model
-
-First go to `evaluation/asnq`, and build the eval tool and copy the qrel file over:
-
-```
-tar xvzf trec_eval.9.0.4.tar.gz
-cd trec_eval.9.0.4
-make
-cd ..
-cp ../../data/asnq/asnq.qrel.dev.tsv .
-```
 
 #### Evaluate with early exiting
 
@@ -101,9 +75,15 @@ We evaluate the model efficiency with real early exiting.
 scripts/eval_ee.sh bert base DATASET all PARTITIONS PC NC
 ```
 
-PARTITIONS is the partitions you wish to evaluate. If you wish to evaluate the entire dev set, it's `0-69` for msmarco and `0-5` for asnq.
+PARTITIONS is the partitions you wish to evaluate. If you wish to evaluate the entire dev set, it's `0-69` for msmarco.
 
 `PC` and `NC` are positive and negative confidence thresholds.
+
+Note: if you're using the Compute Canada environment to submit the job for running the experiment, use the command below after performing the necessary configuration:
+
+```
+sbatch --mem=32G --cpus-per-task=2 --time=30:0:0 --gres=gpu:v100l:1 scripts/eval_ee.sh bert base msmarco all 0-69 1.0 0.9
+```
 
 It generates a folder `evaluation/DATASET/pc-PC-nc-NC`, we can then evaluate it with
 
