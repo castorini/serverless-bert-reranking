@@ -18,7 +18,7 @@ tqdm tensorboardX boto3 regex sentencepiece sacremoses scikit-learn requests
 
 ##  Data Preparation
 
-Two datasets are used in this repo: MS MARCO passage
+Dataset used in this repo: MS MARCO passage
 
 #### MS MARCO passage (https://github.com/microsoft/MSMARCO-Passage-Ranking)
 
