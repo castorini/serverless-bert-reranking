@@ -18,7 +18,7 @@ tqdm tensorboardX boto3 regex sentencepiece sacremoses scikit-learn requests
 
 ##  Data Preparation
 
-Two datasets are used in this repo: MS MARCO passage and ASNQ.
+Two datasets are used in this repo: MS MARCO passage
 
 #### MS MARCO passage (https://github.com/microsoft/MSMARCO-Passage-Ranking)
 
@@ -64,6 +64,12 @@ scripts/train.sh bert base DATASET all
 `bert base` is the pre-trained model; `all` stands for training all layers together.
 
 DATASET can be chosen as `msmarco`.
+
+Note: if you're using the Compute Canada environment to submit the job for training, use the command below after performing the necessary configuration:
+
+```
+sbatch --mem=32G --cpus-per-task=2 --time=30:0:0 --gres=gpu:v100l:1 scripts/train.sh bert base msmarco all
+```
 
 ## Evaluating the Model
 
