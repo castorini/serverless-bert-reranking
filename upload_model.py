@@ -17,6 +17,8 @@ try:
         s3_client.create_bucket(Bucket=bucket_name,
                                 CreateBucketConfiguration=location)
 
-    s3_client.upload_file('model.bin', 'model', 'model')
+    s3_client.upload_file('model.bin', 'model', 'model/model.bin')
+    s3_client.upload_file('model.bin', 'model', 'model/config.json')
+    s3_client.upload_file('model.bin', 'model', 'model/vocab.txt')
 except ClientError as e:
     logging.error(e)
