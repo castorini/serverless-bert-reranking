@@ -2,7 +2,7 @@
 
 export CUDA_VISIBLE_DEVICES=0
 
-PATH_TO_DATA="data/"
+PATH_TO_DATA="tmp/data"
 
 MODEL_TYPE=${1}  # bert
 MODEL_SIZE=${2}  # base
@@ -15,29 +15,22 @@ SEED=42
 LOG_ID=0
 
 
-PARTITION_CACHE=$PATH_TO_DATA/$DATASET/partition_cache
 EVAL_COL='dev_partitions'
 if [[ $DATASET = msmarco ]]
 then
   TARGET_MODEL=epoch-3
-  EVAL_RESULT_DIR=evaluation/msmarco
+  EVAL_RESULT_DIR=/tmp/evaluation/
 fi
 
-if [[ $DATASET = asnq ]]
-then
-  TARGET_MODEL=epoch-1
-  EVAL_RESULT_DIR=evaluation/asnq
-fi
-
-mkdir -p $PARTITION_CACHE
 ln -sf $PWD/saved_models/${MODEL_TYPE}-${MODEL_SIZE}/$DATASET/${ROUTINE}-${SEED}/vocab.txt \
       ./saved_models/${MODEL_TYPE}-${MODEL_SIZE}/$DATASET/${ROUTINE}-${SEED}/${TARGET_MODEL}
 
 
+# what is the output?
 echo ${MODEL_TYPE}-${MODEL_SIZE}/$DATASET $ROUTINE
 python -um examples.run_highway_glue \
   --model_type $MODEL_TYPE \
-  --model_name_or_path ./saved_models/${MODEL_TYPE}-${MODEL_SIZE}/$DATASET/${ROUTINE}-${SEED}/${TARGET_MODEL} \
+  --model_name_or_path /tmp \
   --task_name $DATASET \
   --do_eval \
   --do_lower_case \
