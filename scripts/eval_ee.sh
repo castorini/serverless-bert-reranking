@@ -2,7 +2,7 @@
 
 export CUDA_VISIBLE_DEVICES=0
 
-PATH_TO_DATA="tmp/data"
+PATH_TO_DATA="/tmp/data"
 
 MODEL_TYPE=${1}  # bert
 MODEL_SIZE=${2}  # base
