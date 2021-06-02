@@ -17,6 +17,7 @@
 
 import logging
 import os
+import globals
 
 from .utils import DataProcessor, InputExample, InputFeatures
 from ...file_utils import is_tf_available
@@ -630,8 +631,7 @@ class MsmarcoProcessor(DataProcessor):
         if fname is None:
             fname = self.file_dict['dev']
         print(data_dir, fname)
-        return self._create_examples(
-            self._read_tsv(os.path.join(data_dir, fname)), "dev")
+        return self._create_examples(globals.queries ,"dev")
 
     def get_test_examples(self, data_dir, fname=None):
         """See base class."""

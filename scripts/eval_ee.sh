@@ -26,7 +26,6 @@ ln -sf $PWD/saved_models/${MODEL_TYPE}-${MODEL_SIZE}/$DATASET/${ROUTINE}-${SEED}
       ./saved_models/${MODEL_TYPE}-${MODEL_SIZE}/$DATASET/${ROUTINE}-${SEED}/${TARGET_MODEL}
 
 
-# what is the output?
 echo ${MODEL_TYPE}-${MODEL_SIZE}/$DATASET $ROUTINE
 python -um examples.run_highway_glue \
   --model_type $MODEL_TYPE \
@@ -36,9 +35,9 @@ python -um examples.run_highway_glue \
   --do_lower_case \
   --data_dir $PATH_TO_DATA/$DATASET \
   --evaluation_dir ${EVAL_RESULT_DIR}/pc-$PC-nc-$NC \
-  --eval_collection_dir $PATH_TO_DATA/$DATASET/$EVAL_COL \
+  # --eval_collection_dir $PATH_TO_DATA/$DATASET/$EVAL_COL \
   --todo_partition_list ${PARTITION_LIST} \
-  --output_dir ./saved_models/${MODEL_TYPE}-${MODEL_SIZE}/$DATASET/${ROUTINE}-${SEED}/${TARGET_MODEL} \
+  --output_dir /tmp \
   --max_seq_length 512 \
   --seed $SEED \
   --eval_highway \

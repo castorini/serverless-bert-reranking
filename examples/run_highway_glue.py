@@ -20,6 +20,7 @@ from __future__ import absolute_import, division, print_function
 import argparse
 import glob
 import logging
+import globals
 import os
 import gc
 import random
@@ -558,12 +559,16 @@ def evaluate(args, model, tokenizer, prefix="", output_layer=-1, eval_highway=Fa
                             layer_dir,
                             split+'.'+eval_partition+'.score'
                         )
-                        with open(submit_fname, 'w') as fout:
-                            for j in range(len(eval_qpids)):
-                                print('{}\t{}\t{}'.format(eval_qpids[j][0],
-                                                          eval_qpids[j][1],
-                                                          rel_logit_collection[j][i]),
-                                      file=fout)
+                        for j in range(len(eval_qpids)):
+                            globals.results.append('{}\t{}\t{}\t{}'.format(eval_qpids[j][0], 
+                                eval_qpids[j][1], rel_logit_collection[j][i]))
+
+                        # with open(submit_fname, 'w') as fout:
+                        #     for j in range(len(eval_qpids)):
+                        #         print('{}\t{}\t{}'.format(eval_qpids[j][0],
+                        #                                   eval_qpids[j][1],
+                        #                                   rel_logit_collection[j][i]),
+                        #               file=fout)
 
                 else:
                     # early exit evaluation
@@ -573,13 +578,17 @@ def evaluate(args, model, tokenizer, prefix="", output_layer=-1, eval_highway=Fa
                         args.evaluation_dir,
                         split + '.' + eval_partition + '.score'
                     )
-                    with open(submit_fname, 'w') as fout:
-                        for j in range(len(eval_qpids)):
-                            print('{}\t{}\t{}\t{}'.format(eval_qpids[j][0],
-                                                          eval_qpids[j][1],
-                                                          prob_collection[j],
-                                                          exit_layer_collection[j]),
-                                  file=fout)
+
+                    # query id, passage id, probability
+                    for j in range(len(eval_qpids)):
+                        globals.results.append('{}\t{}\t{}\t{}'.format(eval_qpids[j][0], eval_qpids[j][1], prob_collection[j]))
+                    # with open(submit_fname, 'w') as fout:
+                    #     for j in range(len(eval_qpids)):
+                    #         print('{}\t{}\t{}\t{}'.format(eval_qpids[j][0],
+                    #                                       eval_qpids[j][1],
+                    #                                       prob_collection[j],
+                    #                                       exit_layer_collection[j]),
+                    #               file=fout)
                     np.save(
                         os.path.join(args.evaluation_dir, split+'.'+eval_partition+'.npy'),
                         np.array(exit_layer_counter))
@@ -653,7 +662,8 @@ def load_and_cache_examples(args, task, tokenizer, evaluate=False,
                                                 )
         if args.local_rank in [-1, 0]:
             logger.info("Saving features into cached file %s", cached_features_file)
-            torch.save([features, qpids], cached_features_file)
+            # disable cache, this should be the only place?
+            # torch.save([features, qpids], cached_features_file)
 
     if args.local_rank == 0 and not evaluate:
         torch.distributed.barrier()  # Make sure only the first process in distributed training process the dataset, and the others will use the cache

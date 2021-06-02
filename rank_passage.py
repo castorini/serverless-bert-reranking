@@ -1,44 +1,36 @@
 import subprocess
+import globals
 import boto3
 import logging
 import os.path
-from pathlib import Path
 
 s3 = boto3.client('s3')
 logger = logging.getLogger(__name__)
-Path("/tmp/data/msmarco/dev_partitions").mkdir(parents=True, exist_ok=True)
 
-def rerank(query):
-    # the query should look like this
-    # 188714  1000052 foods and supplements to lower blood sugar      Watch portion sizes
-    k = 4
-    qid = query.split()[0]
-
-    s3.download_file('collections', qid, '/tmp/data/msmarco/dev_partitions/partition70')
+def rerank():
+    k = 1
 
     pc = '1.0'
     nc = '0.9'
     subprocess.call(['./scripts/eval_ee.sh', 'bert', 'base', 'msmarco', 'all', '70', pc, nc])
 
-    with_score = []
-    score_file = 'evaluation/msmarco/pc-' + pc + '-nc-' + nc + '/dev.partition70.score'
     # maybe add passage content later?
-    with open(score_file) as fin:
-        for line in fin:
-            line_arr = line.split('\t')
-            with_score.append([line_arr[1], line_arr[2]])
-
-    return sorted(with_score, key=lambda x: x[2], reverse=True)[0:k]
+    return sorted(globals.results, key=lambda x: x[2], reverse=True)[0:k]
 
 def lambda_handler(event, context):
     # TODO: update the query here
-    query = "188714\t1000052\tfoods and supplements to lower blood sugar\tWatch portion sizes"
+    query1 = "188714\t1000052\tfoods and supplements to lower blood sugar\tWatch portion sizes"
+    query2 = "188714\t1022490\tfoods and supplements to lower blood sugar\tCinnamon, people who have diabetes, is commonly used to reduce blood sugar      and cholesterol level in blood. Onions contain falconoid and high sulfur which if consumed two ounces daily by diabetics reduces blood su     gar significantly. Garlic is a beneficial herb is another of the foods that lower blood sugar."
+
     if not os.path.isfile("/tmp/model.bin"):
         s3.download_file('model', 'model', '/tmp/model.bin')
         s3.download_file('model', 'config', '/tmp/config.json')
         s3.download_file('model', 'vocab', '/tmp/vocab.txt')
+    globals.init()
+    globals.queries.append(query1)
+    globals.queries.append(query2)
 
-    rerank(query)
+    rerank()
     response = {
         "statusCode": 200,
         "headers": {
