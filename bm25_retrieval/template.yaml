@@ -1,0 +1,99 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  anlessini-SAM
+
+  Sample SAM Template for anlessini-SAM
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 150
+
+Resources:
+  IndexS3Bucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+
+  DynamoTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "anlessini-${AWS::StackName}"
+      BillingMode: PROVISIONED # This will ensure minimum cost with AWS Free Tier
+      AttributeDefinitions:
+        - AttributeName: "id"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "id"
+          KeyType: "HASH"
+
+  SearchApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub "anlessini-${AWS::StackName}-search"
+      StageName: Prod
+      MethodSettings:
+        - ResourcePath: /search
+          HttpMethod: GET
+          ThrottlingBurstLimit: 2
+          ThrottlingRateLimit: 2
+
+  SearchLambdaFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: search-lambda-function/target/search-lambda-function-0.1.0-SNAPSHOT-fatjar.jar
+      Handler: io.anlessini.SearchLambda::handleRequest
+      Runtime: java11
+      MemorySize: 10240
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Ref 'IndexS3Bucket'
+      Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
+        Variables:
+          INDEX_BUCKET: !Ref 'IndexS3Bucket'
+          INDEX_KEY: !Ref 'AWS::StackName'
+
+  QARankingFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: qa-ranking-lambda-function/.
+      Handler: lambda_function.lambda_handler
+      Runtime: python3.8
+      MemorySize: 10240
+      Policies:
+        - LambdaInvokePolicy:
+            FunctionName: !Ref SearchLambdaFunction
+        - DynamoDBCrudPolicy:
+            TableName: !Ref 'DynamoTable'
+      Environment:
+        Variables:
+          SEARCH_LAMBDA: !Ref SearchLambdaFunction
+          DYNAMODB_TABLE: !Ref 'DynamoTable'
+          DYNAMODB_CONCURRENCY: 8
+      Events:
+        AnlessiniSearch:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            RestApiId: !Ref 'SearchApi'
+            Path: /search
+            Method: get
+
+Outputs:
+  IndexBucketName:
+    Description: "Name of S3 bucket to hold the index files"
+    Value: !Ref 'IndexS3Bucket'
+  DynamoTableName:
+    Description: "Name of DynamoDB table to hold the document fields"
+    Value: !Ref 'DynamoTable'
+  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
+  # Find out more about other implicit resources you can reference within SAM
+  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
+  SearchApiUrl:
+    Description: "API Gateway endpoint URL for Prod stage for search lambda function"
+    Value: !Sub "https://${SearchApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/search/"
+  SearchLambdaFunction:
+    Description: "Lambda Function ARN"
+    Value: !GetAtt SearchLambdaFunction.Arn
+  SearchLambdaFunctionIamRole:
+    Description: "Implicit IAM Role created for search lambda function"
+    Value: !GetAtt SearchLambdaFunction.Arn

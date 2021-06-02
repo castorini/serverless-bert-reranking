@@ -1,0 +1,16 @@
+*~
+.DS_Store
+*.iml
+target/
+.idea/
+
+acl/
+target/
+.aws-sam/
+samconfig.toml
+
+# the name of the S3 bucket that store the Anlessini artifacts
+artifact-bucket.txt
+
+# default directory where CloudFormation output template goes to
+cloudformation/
