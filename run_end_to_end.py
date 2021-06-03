@@ -1,6 +1,7 @@
 import csv
 import requests
 import json
+import time
 
 # Reading the evaluation dataset
 tsv_file = open("queries.eval.small.tsv")
@@ -14,6 +15,7 @@ count = 1
 # which returns a json object containing the relevant docids
 
 for row in read_tsv:
+    time.sleep(0.5)
     params_args = {
         "query": row[1],
         "max_docs": 1000
