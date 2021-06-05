@@ -14,6 +14,7 @@ COPY logs/ /var/task/logs/
 COPY saved_models/ /var/task/saved_models/
 COPY scripts/ /var/task/scripts
 COPY transformers/ /var/task/transformers
+COPY fetch_msmarco_passage_all.py /var/task/
 
 # Command can be overwritten by providing a different command in the template directly.
 CMD ["rerank.lambda_handler"] 

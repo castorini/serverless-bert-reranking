@@ -63,10 +63,10 @@ def get_documents(hits):
 
 
 # just an example
-
-h = [{'docid': '471142', 'score': 12.034427, 'doc': 7353292}]
-d = get_documents(h)
-print(d)
+#
+# h = [{'docid': '471142', 'score': 12.034427, 'doc': 7353292}]
+# d = get_documents(h)
+# print(d)
 
 # output
 

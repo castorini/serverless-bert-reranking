@@ -17,7 +17,6 @@
 
 import logging
 import os
-import globals
 
 from .utils import DataProcessor, InputExample, InputFeatures
 from ...file_utils import is_tf_available
