@@ -20,7 +20,6 @@ from __future__ import absolute_import, division, print_function
 import argparse
 import glob
 import logging
-import globals
 import os
 import gc
 import random
@@ -560,15 +559,15 @@ def evaluate(args, model, tokenizer, prefix="", output_layer=-1, eval_highway=Fa
                             split+'.'+eval_partition+'.score'
                         )
                         for j in range(len(eval_qpids)):
-                            globals.results.append('{}\t{}\t{}\t{}'.format(eval_qpids[j][0], 
-                                eval_qpids[j][1], rel_logit_collection[j][i]))
+                            # globals.results.append('{}\t{}\t{}\t{}'.format(eval_qpids[j][0], 
+                            #     eval_qpids[j][1], rel_logit_collection[j][i]))
 
-                        # with open(submit_fname, 'w') as fout:
-                        #     for j in range(len(eval_qpids)):
-                        #         print('{}\t{}\t{}'.format(eval_qpids[j][0],
-                        #                                   eval_qpids[j][1],
-                        #                                   rel_logit_collection[j][i]),
-                        #               file=fout)
+                            with open(submit_fname, 'w') as fout:
+                                for j in range(len(eval_qpids)):
+                                    print('{}\t{}\t{}'.format(eval_qpids[j][0],
+                                                              eval_qpids[j][1],
+                                                              rel_logit_collection[j][i]),
+                                          file=fout)
 
                 else:
                     # early exit evaluation
@@ -581,14 +580,14 @@ def evaluate(args, model, tokenizer, prefix="", output_layer=-1, eval_highway=Fa
 
                     # query id, passage id, probability
                     for j in range(len(eval_qpids)):
-                        globals.results.append('{}\t{}\t{}\t{}'.format(eval_qpids[j][0], eval_qpids[j][1], prob_collection[j]))
-                    # with open(submit_fname, 'w') as fout:
-                    #     for j in range(len(eval_qpids)):
-                    #         print('{}\t{}\t{}\t{}'.format(eval_qpids[j][0],
-                    #                                       eval_qpids[j][1],
-                    #                                       prob_collection[j],
-                    #                                       exit_layer_collection[j]),
-                    #               file=fout)
+                        # globals.results.append('{}\t{}\t{}\t{}'.format(eval_qpids[j][0], eval_qpids[j][1], prob_collection[j]))
+                        with open(submit_fname, 'w') as fout:
+                            for j in range(len(eval_qpids)):
+                                print('{}\t{}\t{}\t{}'.format(eval_qpids[j][0],
+                                                              eval_qpids[j][1],
+                                                              prob_collection[j],
+                                                              exit_layer_collection[j]),
+                                  file=fout)
                     np.save(
                         os.path.join(args.evaluation_dir, split+'.'+eval_partition+'.npy'),
                         np.array(exit_layer_counter))
