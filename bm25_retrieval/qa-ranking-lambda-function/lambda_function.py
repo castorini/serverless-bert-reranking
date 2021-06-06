@@ -91,7 +91,7 @@ def lambda_handler(event, context):
     max_docs = event["queryStringParameters"].get("max_docs")
 
     hits = invoke_search_lambda(query, max_docs)
-    documents = get_documents(hits)
+    # documents = get_documents(hits)
 
     response = {
         "statusCode": 200,
@@ -99,6 +99,6 @@ def lambda_handler(event, context):
             "Content-Type": "application/json",
             "Access-Control-Allow-Origin": "*"
         },
-        "body": json.dumps(documents)
+        "body": json.dumps(hits)
     }
     return response
