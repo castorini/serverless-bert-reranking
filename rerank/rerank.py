@@ -1,3 +1,4 @@
+import json
 import os
 import subprocess
 import uuid
@@ -19,11 +20,15 @@ def get_documents(docid):
 
 def lambda_handler(event, context):
     # TODO: update the query here
-    # print(os.listdir('/tmp/'))
 
-    query = "foods and supplements to lower blood sugar"
-    ids = [{'docid': '1000052', 'score': 9.461265, 'doc': 6024913}, {'docid': '1022490', 'score': 9.461265, 'doc': 6024913}]
-    docs = get_documents(ids)
+    data = json.loads(event["body"])
+    query = data['query']
+    docs = data['docs']
+
+    # query = "foods and supplements to lower blood sugar"
+    # ids = [{'docid': '1000052', 'score': 9.461265, 'doc': 6024913}, {'docid': '1022490', 'score': 9.461265, 'doc': 6024913}]
+    # docs = get_documents(ids)
+
     # docs = fetch_msmarco_passage_all.get_documents(ids)
     map = {}
     uniq_id = uuid.uuid4().int & (1<<64)-1
@@ -43,22 +48,21 @@ def lambda_handler(event, context):
     with open(score_file) as fin:
         for line in fin:
             line_arr = line.split('\t')
-            with_score.append([line_arr[1], line_arr[2], map[line_arr[1]]])
-    # print(with_score)
+            # with_score.append([line_arr[1], line_arr[2], map[line_arr[1]]])
+            with_score.append([line_arr[1], line_arr[2]])
 
     # remove the files
     os.remove('/tmp/dev.partition' + str(uniq_id) + '.score')
     os.remove('/tmp/' + str(uniq_id) + '.log')
     os.remove('/tmp/dev.partition' + str(uniq_id) + '.npy')
     os.remove('/tmp/dev_partitions/partition' + str(uniq_id))
-    print("im here")
     response = {
         "statusCode": 200,
         "headers": {
             "Content-Type": "application/json",
             "Access-Control-Allow-Origin": "*"
         },
-        "body": "TODO"
+        "body": json.dumps(with_score)
     }
     return response
 
