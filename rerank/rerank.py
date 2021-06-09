@@ -2,13 +2,13 @@ import os
 import subprocess
 import uuid
 import boto3
-import logging
+from pathlib import Path
 # import fetch_msmarco_passage_all
 
+Path("/tmp/dev_partitions").mkdir(parents=True, exist_ok=True)
 pc = '1.0'
 nc = '0.9'
 s3 = boto3.client('s3')
-logger = logging.getLogger(__name__)
 
 def rerank(uniq_id):
     subprocess.call(['./scripts/eval_ee.sh', 'bert', 'base', 'msmarco', 'all', str(uniq_id), pc, nc])
@@ -19,6 +19,7 @@ def get_documents(docid):
 
 def lambda_handler(event, context):
     # TODO: update the query here
+    # print(os.listdir('/tmp/'))
 
     query = "foods and supplements to lower blood sugar"
     ids = [{'docid': '1000052', 'score': 9.461265, 'doc': 6024913}, {'docid': '1022490', 'score': 9.461265, 'doc': 6024913}]
@@ -26,7 +27,7 @@ def lambda_handler(event, context):
     # docs = fetch_msmarco_passage_all.get_documents(ids)
     map = {}
     uniq_id = uuid.uuid4().int & (1<<64)-1
-    with open('data/msmarco/dev_partitions/partition' + str(uniq_id), 'w') as f:
+    with open('/tmp/dev_partitions/partition' + str(uniq_id), 'w') as f:
         for item in docs:
             docid = item["id"]
             content = item["contents"]
@@ -38,7 +39,7 @@ def lambda_handler(event, context):
     rerank(uniq_id)
 
     with_score = []
-    score_file = 'evaluation/msmarco/pc-' + pc + '-nc-' + nc + '/dev.partition' + str(uniq_id) + '.score'
+    score_file = '/tmp/dev.partition' + str(uniq_id) + '.score'
     with open(score_file) as fin:
         for line in fin:
             line_arr = line.split('\t')
@@ -46,16 +47,18 @@ def lambda_handler(event, context):
     # print(with_score)
 
     # remove the files
-    os.remove('evaluation/msmarco/pc-' + pc + '-nc-' + nc + '/dev.partition' + str(uniq_id) + '.score')
-    os.remove('evaluation/msmarco/pc-' + pc + '-nc-' + nc + '/dev.partition' + str(uniq_id) + '.npy')
-    os.remove('data/msmarco/dev_partitions/partition' + str(uniq_id))
+    os.remove('/tmp/dev.partition' + str(uniq_id) + '.score')
+    os.remove('/tmp/' + str(uniq_id) + '.log')
+    os.remove('/tmp/dev.partition' + str(uniq_id) + '.npy')
+    os.remove('/tmp/dev_partitions/partition' + str(uniq_id))
+    print("im here")
     response = {
         "statusCode": 200,
         "headers": {
             "Content-Type": "application/json",
             "Access-Control-Allow-Origin": "*"
         },
-        "body": with_score[0][1]
+        "body": "TODO"
     }
     return response
 

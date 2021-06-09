@@ -631,7 +631,7 @@ class MsmarcoProcessor(DataProcessor):
             fname = self.file_dict['dev']
         print(data_dir, fname)
         return self._create_examples(
-            self._read_tsv(os.path.join(data_dir, fname)), "dev")
+            self._read_tsv(os.path.join(data_dir, 'partition' + fname)), "dev")
 
     def get_test_examples(self, data_dir, fname=None):
         """See base class."""

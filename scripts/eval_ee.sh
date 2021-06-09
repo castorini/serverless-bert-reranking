@@ -24,8 +24,8 @@ then
 fi
 
 mkdir -p $PARTITION_CACHE
-ln -sf $PWD/saved_models/${MODEL_TYPE}-${MODEL_SIZE}/$DATASET/${ROUTINE}-${SEED}/vocab.txt \
-      ./saved_models/${MODEL_TYPE}-${MODEL_SIZE}/$DATASET/${ROUTINE}-${SEED}/${TARGET_MODEL}
+# ln -sf $PWD/saved_models/${MODEL_TYPE}-${MODEL_SIZE}/$DATASET/${ROUTINE}-${SEED}/vocab.txt \
+#       ./saved_models/${MODEL_TYPE}-${MODEL_SIZE}/$DATASET/${ROUTINE}-${SEED}/${TARGET_MODEL}
 
 
 echo ${MODEL_TYPE}-${MODEL_SIZE}/$DATASET $ROUTINE
@@ -48,4 +48,5 @@ python -um examples.run_highway_glue \
   --nc $NC \
   --train_routine $ROUTINE \
   --log_id $LOG_ID \
-  --output_score_file
+  --output_score_file \
+  --log_id $PARTITION_LIST
