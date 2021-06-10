@@ -34,6 +34,8 @@ def rerank(i):
     # return i
     return r.json()
 
+open("output.txt", 'w').close()
+
 for row in read_tsv:
     params_args = {
         "query": row[1],
@@ -57,7 +59,7 @@ for row in read_tsv:
     flat = [item for sublist in a for item in sublist]
 
     result = sorted(flat, key=lambda x: x[1], reverse=True)[0:k]
-    with open('output.txt', 'w') as f:
+    with open("output.txt", "a") as f:
         for idx, item in enumerate(result):
             rank = idx + 1
             line =  row[0] + " " + "Q0 " + item[0] + " " + str(rank) + " " + str(item[1]) + " TEAM\n"
