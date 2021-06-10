@@ -58,7 +58,7 @@ for row in read_tsv:
 
     flat = [item for sublist in a for item in sublist]
 
-    result = sorted(flat, key=lambda x: x[1], reverse=True)[0:k]
+    result = sorted(flat, key=lambda x: float(x[1]), reverse=True)[0:k]
     with open("output.txt", "a") as f:
         for idx, item in enumerate(result):
             rank = idx + 1
