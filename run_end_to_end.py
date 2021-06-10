@@ -60,7 +60,7 @@ for row in read_tsv:
     with open('output.txt', 'w') as f:
         for idx, item in enumerate(result):
             rank = idx + 1
-            line =  row[0] + " " + "Q0 " + item[0] + " " + str(rank) + " -" + str(rank) + " TEAM\n"
+            line =  row[0] + " " + "Q0 " + item[0] + " " + str(rank) + " " + str(item[1]) + " TEAM\n"
             f.write(line)
     print(str(count) + ' / ' + str(limit) + ' done')
     if count == limit:

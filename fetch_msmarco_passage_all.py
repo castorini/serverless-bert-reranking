@@ -8,7 +8,7 @@ import time
 import boto3
 from botocore.exceptions import ClientError
 
-DYNAMODB_TABLE = "anlessini-msmarco"
+DYNAMODB_TABLE = "anlessini-finally"
 DYNAMODB_CONCURRENCY = int(os.environ.get("DYNAMODB_CONCURRENCY", 8))
 DYNAMODB_RETRY_EXCEPTIONS = [
     "ProvisionedThroughputExceededException", "ThrottlingException"]
