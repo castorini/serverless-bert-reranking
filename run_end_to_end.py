@@ -26,11 +26,15 @@ limit = 100
 def rerank(i):
     rerank_params = {"docs": docs[i * size : i * size + size], "query": row[1]}
     while True:
-        r = requests.post(rerank_url, json=rerank_params)
-        if not r:
-            print("retry rerank", i)
-        else:
-            break
+        try:
+            r = requests.post(rerank_url, json=rerank_params)
+            if not r:
+                print("retry rerank", i)
+            else:
+                break
+        except requests.exceptions.ConnectionError:
+            print("retry rerank conn issue", i)
+            continue
     # return i
     return r.json()
 
