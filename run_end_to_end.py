@@ -1,4 +1,5 @@
 import csv
+import math
 import requests
 import json
 import time
@@ -6,7 +7,7 @@ import fetch_msmarco_passage_all
 from concurrent.futures import ThreadPoolExecutor
 
 # Reading the evaluation dataset
-tsv_file = open("queries.eval.small.tsv")
+tsv_file = open("queries.dev.small.tsv")
 read_tsv = csv.reader(tsv_file, delimiter="\t")
 
 search_url = "https://7wl1vh4ftb.execute-api.us-east-2.amazonaws.com/Prod/search/"
@@ -56,7 +57,7 @@ for row in read_tsv:
 
     r = r.json()
     docs = fetch_msmarco_passage_all.get_documents(r)
-    partitions = len(docs) // size
+    partitions = math.ceil(len(docs) / size)
     with ThreadPoolExecutor(max_workers=partitions) as pool:
         a = list(pool.map(rerank, range(0, partitions)))
 
