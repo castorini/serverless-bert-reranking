@@ -36,7 +36,7 @@ def lambda_handler(event, context):
         for item in docs:
             docid = item["id"]
             content = item["contents"]
-            map[docid] = content
+            map[docid] = content.encode('latin1').decode('utf8')
             # query id doesnt matter in this case
             line = "1\t" + docid + "\t" + query + "\t" + content + "\n"
             f.write(line)
