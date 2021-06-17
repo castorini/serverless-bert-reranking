@@ -21,11 +21,11 @@ count = 1
 # top k results
 k = 100
 size = 10
-docs = []
-limit = 100
+ids = []
+limit = 10
 
 def rerank(i):
-    rerank_params = {"docs": docs[i * size : i * size + size], "query": row[1]}
+    rerank_params = {"ids": ids[i * size : i * size + size], "query": row[1]}
     while True:
         try:
             r = requests.post(rerank_url, json=rerank_params)
@@ -48,6 +48,7 @@ for row in read_tsv:
     }
 
     # try until it works
+    start = time.time()
     while True:
         r = requests.get(url=search_url, params=params_args)
         if not r:
@@ -55,9 +56,9 @@ for row in read_tsv:
         else:
             break
 
-    r = r.json()
-    docs = fetch_msmarco_passage_all.get_documents(r)
-    partitions = math.ceil(len(docs) / size)
+    ids = r.json()
+    # docs = fetch_msmarco_passage_all.get_documents(r)
+    partitions = math.ceil(len(ids) / size)
     with ThreadPoolExecutor(max_workers=partitions) as pool:
         a = list(pool.map(rerank, range(0, partitions)))
 
@@ -69,6 +70,8 @@ for row in read_tsv:
             rank = idx + 1
             line =  row[0] + " " + "Q0 " + item[0] + " " + str(rank) + " " + str(item[1]) + " TEAM\n"
             f.write(line)
+    end = time.time()
+    print(end - start)
     print(str(count) + ' / ' + str(limit) + ' done')
     if count == limit:
         break

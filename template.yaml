@@ -16,6 +16,8 @@ Resources:
     Properties:
       MemorySize: 10240
       PackageType: Image
+      Policies:
+        - AmazonDynamoDBFullAccess
       Events:
         Rerank:
           Type: Api
