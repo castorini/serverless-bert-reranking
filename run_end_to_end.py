@@ -40,6 +40,7 @@ def rerank(i):
     return r.json()
 
 open("output.txt", 'w').close()
+open("latency.txt", 'w').close()
 
 for row in read_tsv:
     params_args = {
@@ -48,30 +49,35 @@ for row in read_tsv:
     }
 
     # try until it works
-    start = time.time()
+    start1 = time.time()
     while True:
         r = requests.get(url=search_url, params=params_args)
         if not r:
             print("retry search")
         else:
             break
+    end1 = time.time()
 
     ids = r.json()
     # docs = fetch_msmarco_passage_all.get_documents(r)
+    start2 = time.time()
     partitions = math.ceil(len(ids) / size)
     with ThreadPoolExecutor(max_workers=partitions) as pool:
         a = list(pool.map(rerank, range(0, partitions)))
+    end2 = time.time()
 
     flat = [item for sublist in a for item in sublist]
 
     result = sorted(flat, key=lambda x: float(x[1]), reverse=True)[0:k]
+    latency = end1 - start1 + end2 - start2
+    with open("latency.txt", "a") as f:
+        f.write(str(latency) + " " + str(end1 - start1) + " " + str(end2 - start2))
+
     with open("output.txt", "a") as f:
         for idx, item in enumerate(result):
             rank = idx + 1
             line =  row[0] + " " + "Q0 " + item[0] + " " + str(rank) + " " + str(item[1]) + " TEAM\n"
             f.write(line)
-    end = time.time()
-    print(end - start)
     print(str(count) + ' / ' + str(limit) + ' done')
     if count == limit:
         break
