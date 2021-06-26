@@ -29,4 +29,10 @@ So essentially any file with a `qid` or query id and query, separated by a `\t` 
 
 In `run_end_to_end.py`, we go through each query in our source file and first call our search API to return 1000 docids. This result is used to fetch the relevant passages from DynamoDB (see file `fetch_msmarco_passage_all.py`), where we'd ingested our corpus as part of setting up BM25 search. 
 
-We then pass the passage content as well as the query to the BERT API for reranking, sorting the result further based on the score. 
+For testing purposes, we can pass `--limit` parameter which specifies the number of queries the code will run through, for example:
+
+```python
+python run_end_to_end.py --limit 100
+```
+
+We run through `limit` number of queries, for each query we retrieve 1000 passages using BM25, pass the passage content as well as the query to the BERT API for reranking, sorting the result further based on the score and pick top k (default is 100).
