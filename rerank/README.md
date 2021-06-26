@@ -31,10 +31,19 @@ sam build
 # create a new ECR repository
 aws ecr create-repository --repository-name rerank --image-scanning-configuration scanOnPush=true --image-tag-mutability MUTABLE
 
-# paste the value of "repositoryUri" when prompted to enter "Image Repository for RerankFunction" later
+# copy the value of "repositoryUri"
 
 # deploy the application with a guided interactive mode
 sam deploy -g
-# give it a name you like :), choose the correct region, paste "repositoryUri" value and answer yes
+# name: rerank, choose the correct region, paste "repositoryUri" value and answer yes
 ```
 
+To trigger BERT reranking, go to rerank Lambda in AWS console, click on API Gateway icon, copy API endpoint value and run
+
+```bash
+touch rerank-url && echo "your-api-endpoint-value" >> rerank-url
+
+python3 test-rerank.py
+```
+
+And the output should be like `[['7187155', '0.9951216578483582']]`
