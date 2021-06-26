@@ -7,7 +7,7 @@ RUN pip3 install tqdm tensorboardX boto3 regex sentencepiece sacremoses scikit-l
 COPY data/ /var/task/data
 COPY evaluation/ /var/task/evaluation
 COPY examples/ /var/task/examples
-COPY rerank/ /var/task/
+COPY rerank.py /var/task/
 COPY logs/ /var/task/logs/
 COPY saved_models/ /var/task/saved_models/
 COPY scripts/ /var/task/scripts
