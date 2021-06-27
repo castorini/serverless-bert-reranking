@@ -12,7 +12,7 @@ tsv_file = open("queries.dev.small.tsv")
 read_tsv = csv.reader(tsv_file, delimiter="\t")
 
 # Replace with your API URLs
-search_url = "https://7wl1vh4ftb.execute-api.us-east-2.amazonaws.com/Prod/search/"
+search_url = "https://7wl1vh4ftb.execute-api.us-east-2.amazonaws.com/Prod/search"
 rerank_url = "https://zcjb9x6wx5.execute-api.us-east-2.amazonaws.com/Prod/rerank"
 
 count = 1

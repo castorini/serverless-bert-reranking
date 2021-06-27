@@ -15,9 +15,12 @@ Follow the guidline in [Early Exiting MonoBERT](https://github.com/castorini/ear
 After training the model, copy the model over.
 
 ```bash
+# go to current directory
+cd rerank
 mkdir -p bert-base/msmarco/all-100/
 pushd bert-base/msmarco/all-100/
 cp -r your-path-to-earlyexiting-monobert/saved_models/bert-base/msmarco/all-42/ .
+cp vocab.txt epoch-3/vocab.txt
 rm -rf epoch-0 epoch-1 epoch-2 # we only care about epoch-3
 popd
 ```
