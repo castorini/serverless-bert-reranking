@@ -179,7 +179,7 @@ def get_args():
 
 args = get_args()
 
-logging.basicConfig(filename="logs/{}.log".format(args.log_id),
+logging.basicConfig(filename="/tmp/{}.log".format(args.log_id),
                     filemode='w',
                     level=0)
 logger = logging.getLogger(__name__)
@@ -437,14 +437,11 @@ def evaluate(args, model, tokenizer, prefix="", output_layer=-1, eval_highway=Fa
     eval_output_dir = args.output_dir
 
     results = {}
-    for eval_partition in sorted(
-            os.listdir(args.eval_collection_dir), key=lambda x: int(x[x.find('partition')+9:])
-    ):
-        if int(eval_partition[9:]) not in args.todo_partition_list:  # the number
-            continue
+    for eval_partition in args.todo_partition_list:
+        eval_partition = str(eval_partition)
         eval_dataset, eval_qpids = load_and_cache_examples(
             args, eval_task, tokenizer, evaluate=True,
-            eval_dir_partition=(args.eval_collection_dir, eval_partition),
+            eval_dir_partition=('/tmp/dev_partitions/', eval_partition),
             testset=args.testset)
 
         if not os.path.exists(eval_output_dir) and args.local_rank in [-1, 0]:
@@ -513,16 +510,16 @@ def evaluate(args, model, tokenizer, prefix="", output_layer=-1, eval_highway=Fa
         eval_time = time.time() - st
         print("Eval time:", eval_time)
 
-        if eval_highway:
-            # also record correctness per layer
-            save_path = args.plot_data_dir + \
-                         args.model_name_or_path[2:]
-            if not os.path.exists(save_path):
-                os.makedirs(save_path)
-            np.save(save_path + "/correctness_layer{}.npy".format(output_layer),
-                    np.array(np.argmax(preds, axis=1) == out_label_ids))
-            np.save(save_path + "/prediction_layer{}.npy".format(output_layer),
-                    np.array(np.argmax(preds, axis=1)))
+        # if eval_highway:
+        #     # also record correctness per layer
+        #     save_path = args.plot_data_dir + \
+        #                  args.model_name_or_path[2:]
+        #     if not os.path.exists(save_path):
+        #         os.makedirs(save_path)
+        #     np.save(save_path + "/correctness_layer{}.npy".format(output_layer),
+        #             np.array(np.argmax(preds, axis=1) == out_label_ids))
+        #     np.save(save_path + "/prediction_layer{}.npy".format(output_layer),
+        #             np.array(np.argmax(preds, axis=1)))
 
         eval_loss = eval_loss / nb_eval_steps
         if args.output_mode == "classification":
@@ -533,11 +530,11 @@ def evaluate(args, model, tokenizer, prefix="", output_layer=-1, eval_highway=Fa
         results.update(result)
 
         output_eval_file = os.path.join(eval_output_dir, prefix, "eval_results.txt")
-        with open(output_eval_file, "w") as writer:
-            logger.info("***** Eval results {} *****".format(prefix))
-            for key in sorted(result.keys()):
-                logger.info("  %s = %s", key, str(result[key]))
-                writer.write("%s = %s\n" % (key, str(result[key])))
+        # with open(output_eval_file, "w") as writer:
+        #     logger.info("***** Eval results {} *****".format(prefix))
+        #     for key in sorted(result.keys()):
+        #         logger.info("  %s = %s", key, str(result[key]))
+        #         writer.write("%s = %s\n" % (key, str(result[key])))
 
         if eval_highway:
             print("Exit layer counter", exit_layer_counter)
@@ -551,37 +548,47 @@ def evaluate(args, model, tokenizer, prefix="", output_layer=-1, eval_highway=Fa
                 if args.quick_eval:
                     # all layers evaluation
                     for i in range(model.num_layers):
-                        layer_dir = os.path.join(args.evaluation_dir, 'layer'+str(i))
-                        if not os.path.exists(layer_dir):
-                            os.makedirs(layer_dir)
-                        submit_fname = os.path.join(
-                            layer_dir,
-                            split+'.'+eval_partition+'.score'
-                        )
-                        with open(submit_fname, 'w') as fout:
-                            for j in range(len(eval_qpids)):
-                                print('{}\t{}\t{}'.format(eval_qpids[j][0],
-                                                          eval_qpids[j][1],
-                                                          rel_logit_collection[j][i]),
-                                      file=fout)
+                        # layer_dir = os.path.join(args.evaluation_dir, 'layer'+str(i))
+                        # if not os.path.exists(layer_dir):
+                        #     os.makedirs(layer_dir)
+                        # submit_fname = os.path.join(
+                        #     layer_dir,
+                        #     split+'.'+eval_partition+'.score'
+                        # )
+                        submit_fname = os.path.join('/tmp/dev.partition' + eval_partition + '.score')
+                        for j in range(len(eval_qpids)):
+                            # globals.results.append('{}\t{}\t{}\t{}'.format(eval_qpids[j][0], 
+                            #     eval_qpids[j][1], rel_logit_collection[j][i]))
+
+                            with open(submit_fname, 'w') as fout:
+                                for j in range(len(eval_qpids)):
+                                    print('{}\t{}\t{}'.format(eval_qpids[j][0],
+                                                              eval_qpids[j][1],
+                                                              rel_logit_collection[j][i]),
+                                          file=fout)
 
                 else:
                     # early exit evaluation
-                    if not os.path.exists(args.evaluation_dir):
-                        os.makedirs(args.evaluation_dir)
-                    submit_fname = os.path.join(
-                        args.evaluation_dir,
-                        split + '.' + eval_partition + '.score'
-                    )
-                    with open(submit_fname, 'w') as fout:
-                        for j in range(len(eval_qpids)):
-                            print('{}\t{}\t{}\t{}'.format(eval_qpids[j][0],
-                                                          eval_qpids[j][1],
-                                                          prob_collection[j],
-                                                          exit_layer_collection[j]),
+                    # if not os.path.exists(args.evaluation_dir):
+                    #     os.makedirs(args.evaluation_dir)
+                    # submit_fname = os.path.join(
+                    #     args.evaluation_dir,
+                    #     split + '.' + eval_partition + '.score'
+                    # )
+                    submit_fname = os.path.join('/tmp/dev.partition' + eval_partition + '.score')
+
+                    # query id, passage id, probability
+                    for j in range(len(eval_qpids)):
+                        # globals.results.append('{}\t{}\t{}\t{}'.format(eval_qpids[j][0], eval_qpids[j][1], prob_collection[j]))
+                        with open(submit_fname, 'w') as fout:
+                            for j in range(len(eval_qpids)):
+                                print('{}\t{}\t{}\t{}'.format(eval_qpids[j][0],
+                                                              eval_qpids[j][1],
+                                                              prob_collection[j],
+                                                              exit_layer_collection[j]),
                                   file=fout)
                     np.save(
-                        os.path.join(args.evaluation_dir, split+'.'+eval_partition+'.npy'),
+                        os.path.join('/tmp/dev.partition' + eval_partition + '.npy'),
                         np.array(exit_layer_counter))
 
         del eval_dataset, eval_qpids
@@ -653,7 +660,8 @@ def load_and_cache_examples(args, task, tokenizer, evaluate=False,
                                                 )
         if args.local_rank in [-1, 0]:
             logger.info("Saving features into cached file %s", cached_features_file)
-            torch.save([features, qpids], cached_features_file)
+            # disable cache, this should be the only place?
+            # torch.save([features, qpids], cached_features_file)
 
     if args.local_rank == 0 and not evaluate:
         torch.distributed.barrier()  # Make sure only the first process in distributed training process the dataset, and the others will use the cache
@@ -672,7 +680,7 @@ def load_and_cache_examples(args, task, tokenizer, evaluate=False,
     return (dataset, qpids)
 
 def main(args):
-
+    
     if args.train_routine == 'limit':
         finished_layers = os.listdir(args.plot_data_dir + args.output_dir)
         for fname in finished_layers:

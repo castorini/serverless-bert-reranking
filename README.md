@@ -1,118 +1,40 @@
-# Early Exiting MonoBERT
+# Serverless BM25 and BERT reranking pipeline
 
-This is the code base for the paper Early Exiting BERT for Efficient Document Ranking.
+This repository contains the code for the paper titled "Serverless BM25  Search and BERT Reranking". As mentioned in the paper, the project was developed in two parts: BM25 retrieval and BERT reranking.
 
-## Installation
+**Stage 1**: For BM25 retrieval task, refer to [bm25_retrieval](https://github.com/Ji-Xin/serverless-bert-reranking/tree/bm25/bm25_retrieval#bm25-retrieval-using-anlessini)
 
-This repo is tested on Python 3.7.7, PyTorch 1.3.1, and Cuda 10.1. Using a virtualenv or conda environemnt is recommended, for example:
+**Stage 2**: For BERT, the instructions can be found in [rerank](https://github.com/Ji-Xin/serverless-bert-reranking/tree/bm25/rerank#early-exiting-monobert)
 
-```
-conda install pytorch==1.3.1 torchvision cudatoolkit=10.1 -c pytorch
-```
+This project is essentially a retrieval - reranking pipeline built on top of AWS. Once the instructions to set up BM25 retrieval and BERT are completed, the AWS API Gateway will provide a REST API endpoint using which the queries can be passed on to each stage.
 
-Also install the following packages in the environment:
+We provide a script to run this pipeline end-to-end (`run_end_to_end.py`), where we have to specify the API URLs as well as path to our dataset where we need to read the queries from. For our experiment for the paper, we used the `dev` set from the MS MARCO passage dataset which can be found at `collections/msmarco-passage/queries.dev.small.tsv` once you set up [Anserini](https://github.com/castorini/anserini/blob/master/docs/experiments-msmarco-passage.md#retrieval) as part of setting up BM25 retrieval.
 
-```
-tqdm tensorboardX boto3 regex sentencepiece sacremoses scikit-learn requests
-```
-
-##  Data Preparation
-
-Dataset used in this repo: MS MARCO passage
-
-#### MS MARCO passage (https://github.com/microsoft/MSMARCO-Passage-Ranking)
-
-Go to `data/msmarco`, download the training set and extract it:
-
-```
-wget https://msmarco.blob.core.windows.net/msmarcoranking/triples.train.small.tar.gz
-tar -xvzf triples.train.small.tar.gz
+The format of the file (to be used as input) is something like below:
+```bash
+head collections/msmarco-passage/queries.dev.small.tsv
+1048585	what is paula deen's brother
+2	 Androgen receptor define
+524332	treating tension headaches without medication
+1048642	what is paranoid sc
+524447	treatment of varicose veins in legs
+786674	what is prime rate in canada
+1048876	who plays young dr mallard on ncis
+1048917	what is operating system misconfiguration
+786786	what is priority pass
+524699	tricare service number
 ```
 
-then extract uniq training data (details can be found in Section 4 of the paper):
+So essentially any file with a `qid` or query id and query, separated by a `\t` will work for our input.
 
-```
-python convert_data.py triples.train.small.tsv train.uniq.416k.tsv
-```
+In `run_end_to_end.py`, we go through each query in our source file and first call our search API to return 1000 docids. This result is used to fetch the relevant passages from DynamoDB (see file `fetch_msmarco_passage_all.py`), where we'd ingested our corpus as part of setting up BM25 search. 
 
-Also in the same folder, download the dev set and extract it:
+Before running the experiment, replace the url in `run_end_to_end.py` with your own
 
-```
-wget https://msmarco.blob.core.windows.net/msmarcoranking/top1000.dev.tar.gz
-tar -xvzf top1000.dev.tar.gz
-```
+For testing purposes, we can pass `--limit` parameter which specifies the number of queries the code will run through, for example:
 
-then partition the dev set (since it's pretty large, it would be easier to run evaluation by partition; there will be 500 queries per partition):
-
-```
-python partition_eval.py dev
+```python
+python3 run_end_to_end.py --limit 100
 ```
 
-Go to `evaluation/msmarco`, download the qrel collection and extract it (we'll need `qrels.dev.small.tsv` for evaluation):
-
-```
-wget https://msmarco.blob.core.windows.net/msmarcoranking/collectionandqueries.tar.gz
-tar -xvzf collectionandqueries.tar.gz
-```
-
-## Training the Model
-
-```
-scripts/train.sh bert base DATASET all
-```
-
-`bert base` is the pre-trained model; `all` stands for training all layers together.
-
-DATASET can be chosen as `msmarco`.
-
-Note: if you're using the Compute Canada environment to submit the job for training, use the command below after performing the necessary configuration:
-
-```
-sbatch --mem=32G --cpus-per-task=2 --time=30:0:0 --gres=gpu:v100l:1 scripts/train.sh bert base msmarco all
-```
-
-## Evaluating the Model
-
-#### Evaluate with early exiting
-
-We evaluate the model efficiency with real early exiting.
-
-```
-scripts/eval_ee.sh bert base DATASET all PARTITIONS PC NC
-```
-
-PARTITIONS is the partitions you wish to evaluate. If you wish to evaluate the entire dev set, it's `0-69` for msmarco.
-
-`PC` and `NC` are positive and negative confidence thresholds.
-
-Note: if you're using the Compute Canada environment to submit the job for running the experiment, use the command below after performing the necessary configuration:
-
-```
-sbatch --mem=32G --cpus-per-task=2 --time=30:0:0 --gres=gpu:v100l:1 scripts/eval_ee.sh bert base msmarco all 0-69 1.0 0.9
-```
-
-It generates a folder `evaluation/DATASET/pc-PC-nc-NC`, we can then evaluate it with
-
-```
-cd evaluation/DATASET
-python direct_eval.py --sp_folder pc-PC-nc-NC
-```
-
-please check arguments of `direct_eval.py` for more details. For example, you can specify `-p 1-3` to evaluate only partitions 1, 2, and 3.
-
-#### Evaluate for the purpose of the paper
-
-For more efficient evaluation (using a large number of different thresholds), we can use `eval.sh`. In this way, we actually record scores generated by all layers. Model efficiency will be calculated as average exit layers in later scripts.
-
-```
-scripts/eval.sh bert base DATASET all PARTITIONS
-```
-
-It generates folders `evaluation/DATASET/layer*`, we can then evaluate them with
-
-```
-cd evaluation/DATASET
-python direct_eval.py --each_layer  # for evaluating the score of each layer's classifier
-python direct_eval.py -pc PC -nc NC  # for evaluating for given positive and negative thresholds
-```
-
+We run through `limit` number of queries, for each query we retrieve 1000 passages using BM25, pass the passage content as well as the query to the BERT API for reranking, sorting the result further based on the score and pick top k (default is 100).
