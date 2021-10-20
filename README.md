@@ -1,6 +1,6 @@
 # Serverless BM25 and BERT reranking pipeline
 
-This repository contains the code for the paper titled "Serverless BM25  Search and BERT Reranking". As mentioned in the paper, the project was developed in two parts: BM25 retrieval and BERT reranking.
+This repository contains the code for the paper titled [Serverless BM25  Search and BERT Reranking](http://ceur-ws.org/Vol-2950/paper-01.pdf). As mentioned in the paper, the project was developed in two parts: BM25 retrieval and BERT reranking.
 
 **Stage 1**: For BM25 retrieval task, refer to [bm25_retrieval](https://github.com/Ji-Xin/serverless-bert-reranking/tree/bm25/bm25_retrieval#bm25-retrieval-using-anlessini)
 
